@@ -1,0 +1,105 @@
+<div ng-controller="MappingController">
+
+    <div>
+        <form>
+            Password:
+            <input type="text" name="password" ng-model="currentPassword" size="31">
+
+            <i ng-show="uploadForm.password.$error.required">*required</i>
+            <br/>
+
+            Status:
+            <select name="status"
+                    ng-init="status = currentStatus"
+                    ng-model="currentStatus"
+                    ng-options="item for item in userStatus">
+            </select>
+            <br/>
+        </form>
+    </div>
+
+
+    <table class="table table-bordered table-hover table-condensed">
+        <thead>
+        <tr style="font-weight: bold">
+            <td style="width:10%">First Name</td>
+            <td style="width:10%">Last Name</td>
+            <td style="width:20%">Email</td>
+            <td style="width:10%">Country</td>
+            <td style="width:10%">City</td>
+            <td style="width:20%">Address</td>
+            <td style="width:20%">Edit</td>
+        </tr>
+
+        </thead>
+        <tbody ng-repeat="user in users">
+        <tr ng-if="users.length < 10 || $index <= 2 || $last || !user.firstname || !user.lastname || !user.email   " >
+            <td>
+                <span editable-text="user.firstname" e-name="firstname" e-form="rowform" e-required>
+                    {{user.firstname || 'empty'}}
+                </span>
+            </td>
+            <td>
+                <span editable-text="user.lastname" e-name="lastname" e-form="rowform" e-required>
+                    {{user.lastname || 'empty'}}
+                </span>
+            </td>
+
+            <td>
+                <span editable-text="user.email" e-name="email" e-form="rowform" e-required>
+                    {{user.email || 'empty'}}
+                </span>
+            </td>
+
+            <td>
+                <span editable-text="user.country" e-name="country" e-form="rowform">
+                    {{user.country}}
+                </span>
+            </td>
+
+            <td>
+                <span editable-text="user.city" e-name="city" e-form="rowform">
+                    {{user.city}}
+                </span>
+            </td>
+
+            <td>
+                <span editable-text="user.address" e-name="address" e-form="rowform">
+                    {{user.address}}
+                </span>
+            </td>
+
+            <td style="white-space: nowrap">
+                <!-- form -->
+                <form editable-form name="rowform" ng-show="rowform.$visible" class="form-buttons form-inline"
+                      shown="inserted == user" onbeforesave="saveUser($data, $index)">
+                    <button type="submit" ng-disabled="rowform.$waiting" class="btn btn-primary">
+                        save
+                    </button>
+                    <button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()"
+                            class="btn btn-default">
+                        cancel
+                    </button>
+                </form>
+                <div class="buttons" ng-show="!rowform.$visible">
+                    <button class="btn btn-primary" ng-click="rowform.$show()">edit</button>
+                    <button class="btn btn-danger" ng-click="removeUser($index)">del</button>
+                </div>
+            </td>
+        </tr>
+
+        <tr ng-if="users.length > 9 && $index == 3">
+            <td colspan = 7>
+                ..........
+            </td>
+
+        </tr>
+        </tbody>
+    </table>
+    <div>
+        <button ng-click="preview()">
+            Preview
+        </button>
+    </div>
+
+</div>

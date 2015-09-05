@@ -1,0 +1,6 @@
+{
+    "require" : {
+        "doctrine/orm": "2.5.1",
+        "phpoffice/phpexcel": "1.8.1"
+    }
+}

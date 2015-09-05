@@ -1,0 +1,71 @@
+<div ng-controller="PreviewController">
+    <table class="table table-bordered table-hover table-condensed">
+        <thead>
+        <tr style="font-weight: bold">
+            <td style="width:10%">First Name</td>
+            <td style="width:10%">Last Name</td>
+            <td style="width:20%">Email</td>
+            <td style="width:10%">Country</td>
+            <td style="width:10%">City</td>
+            <td style="width:20%">Address</td>
+            <td style="width:20%"></td>
+        </tr>
+
+        </thead>
+        <tbody ng-repeat="user in users">
+        <tr ng-if="users.length < 10 || $index <= 2 || $last || !user.firstname || !user.lastname || !user.email   " >
+            <td>
+                <span>
+                    {{user.firstname || 'empty'}}
+                </span>
+            </td>
+            <td>
+                <span>
+                    {{user.lastname || 'empty'}}
+                </span>
+            </td>
+
+            <td>
+                <span>
+                    {{user.email || 'empty'}}
+                </span>
+            </td>
+
+            <td>
+                <span>
+                    {{user.country}}
+                </span>
+            </td>
+
+            <td>
+                <span>
+                    {{user.city}}
+                </span>
+            </td>
+
+            <td>
+                <span>
+                    {{user.address}}
+                </span>
+            </td>
+            <td>
+
+            </td>
+        </tr>
+
+        <tr ng-if="users.length > 9 && $index == 3">
+            <td colspan = 7>
+                ..........
+            </td>
+
+        </tr>
+
+        </tbody>
+    </table>
+    <div>
+        <button ng-click="backToMapping()">Back</button>
+        <button ng-click="saveToDatabase()">Apply</button>
+    </div>
+
+
+</div>

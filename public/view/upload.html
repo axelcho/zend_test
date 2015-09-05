@@ -1,0 +1,32 @@
+<div>
+    <div ng-controller = "UploadController">
+        <form name="uploadForm" enctype="multipart/form-data" method="post">
+            <fieldset>
+                <legend>Bulk Upload Users</legend>
+
+                Password:
+                <input type="text" name="password" ng-model="password" size="31" required>
+                <i ng-show="uploadForm.password.$error.required">*required</i>
+                <br/>
+
+                Status:
+                <select name="status"
+                        ng-init = "status = userStatus[0]"
+                        ng-model="status"
+                        ng-options = "item for item in userStatus">
+                </select>
+                <br/>
+
+                xlsx File:
+                <input type="file" ngf-select ng-model="xlsFile" name="file"
+                       ngf-max-size="1MB" required>
+                <i ng-show="uploadForm.file.$error.required">*required</i><br>
+                <i ng-show="uploadForm.file.$error.maxSize">File too large
+                    {{xlsFile.size / 1000000|number:1}}MB: max {{xlsFile.$errorParam}}</i>
+                <br/>
+                <button ng-disabled="!uploadForm.$valid"
+                        ng-click="upload(xlsFile)">Submit</button>
+            </fieldset>
+        </form>
+    </div>
+</div>
