@@ -235,7 +235,7 @@ class ApiController extends Zend_Controller_Action
 
 		//bulk saving to database
         $this->em->flush();
-		$this->_helper->json(['parsedData' => $users]);
+		$this->_helper->json([]);
 		exit;
 	}
 }
