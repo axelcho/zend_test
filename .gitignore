@@ -2,3 +2,5 @@
 .idea/*
 vendor/*
 .vagrant/*
+composer.phar
+composer.lock
