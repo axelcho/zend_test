@@ -114,7 +114,7 @@ app.controller('PreviewController', ['$scope', '$rootScope', '$location', '$http
     $scope.saveToDatabase = function(){
         jsonUsers = JSON.stringify($scope.users);
         $http.post('api/save', {users: $scope.users}).then(function(response){
-                console.log(response);
+                console.log('success');
             }
         );
     }
