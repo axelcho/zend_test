@@ -30,22 +30,20 @@ dump the sql at /data/zend_test.sql onto the zend_test database.
 
 
 
-
 How to run
    At vagrant machine, it will run at localhost:8080. If it is running at apache on custom setup, please enter the virtual server name to access the app.
 
-
 There are 3 routes under a single page
 
-#upload 
+upload 
    uploads an excel file, set bulk password and bulk status
 
-#mapping 
+mapping 
    map the data. User can individually edit each record by row. After edit, click on 'save' button.
    If there are more than 10 records, only first 3 and last 1 records will be shown.
    If there is any record with incomplete data, such data will always show up. 
 
-#preview
+preview
    visitor can go back to the previous page (#mapping), or save the record to database (apply)
 
 
@@ -79,7 +77,7 @@ Excel data assumes that it has one metadata row.
 metadata allows some flexibility. any element matching 'first' will be considered firstname, for example.
 So user may enter 'firstname', 'first name', 'firstName', 'First Name' as metadata and backend will understand that they are all 'firstname'
 
-Minimum styling is used. 
+There is no css (except for one included in the library). 
 
 
     
