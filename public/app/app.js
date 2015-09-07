@@ -189,7 +189,6 @@ app.controller('PreviewController', ['$scope', '$location', '$http', 'StorageSer
         $location.path("/mapping");
     }
 
-<<<<<<< HEAD
     $scope.saveToDatabase = function () {
 
         $http.post('api/save',
@@ -199,21 +198,12 @@ app.controller('PreviewController', ['$scope', '$location', '$http', 'StorageSer
                 password: $scope.password,
                 status: $scope.status
             }).then(function (response) {
-
                 if (response.data.success){
                     alert(response.data.success + 'users added successfully');
                 }
-
                 if (response.data.error){
                     alert(response.data.error);
                 }
-
-=======
-    $scope.saveToDatabase = function(){
-        jsonUsers = JSON.stringify($scope.users);
-        $http.post('api/save', {users: $scope.users}).then(function(response){
-                console.log('success');
->>>>>>> e37be4dbc59ec3077b4496bd1aec25409afee751
             }
         );
     }
