@@ -65,19 +65,16 @@ Backend
     api/save process json data into database.
 
 Front End
-   Front end is using angularjs with angular-router, angular-upload(for file upload), and xeditable(to edit content on mapping route).
+   Front end is using angularjs with angular-router and angular-upload(for file upload)
 
    No other library is used. No JQuery or Twitter Bootstrap at all.
 
 
 Miscellaneous:
 
-Excel data assumes that it has one metadata row.
 
-metadata allows some flexibility. any element matching 'first' will be considered firstname, for example.
-So user may enter 'firstname', 'first name', 'firstName', 'First Name' as metadata and backend will understand that they are all 'firstname'
 
-There is no css (except for one included in the library). 
+There is no css 
 
 
     
