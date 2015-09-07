@@ -35,7 +35,7 @@
                     <tr ng-repeat = "user in users">
 
                         <td ng-repeat = "field in fields">
-                            {{user[$index]}}
+                            {{user[$index]}||"<no data>"}
                         </td>
 
                     </tr>

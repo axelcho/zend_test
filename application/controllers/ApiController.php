@@ -159,6 +159,11 @@ class ApiController extends Zend_Controller_Action
                 $model = new Application_Model_Users();
 
                 //populate
+
+                //skip incomplete rows
+                if (empty($user['firstname']) || empty($user['lastname']) || empty($user['email'])){
+                    continue;
+                }
                 $model->setFirstname($user['firstname']);
                 $model->setLastname($user['lastname']);
                 $model->setEmail($user['email']);
