@@ -13,7 +13,7 @@ class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
      */
 	protected function _initPath()
 	{
-		$this->_docRoot = realpath(APPLICATION_PATH . '/../');
+        $this->_docRoot = realpath(APPLICATION_PATH . '/../');
 		Zend_Registry::set('docRoot', $this->_docRoot);
 	}
 

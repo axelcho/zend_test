@@ -1,6 +1,6 @@
 ﻿var app = angular.module('Zend_Test', ['ngRoute', 'ngFileUpload', 'xeditable']);
 
-app.run(function(editableOptions) {
+app.run(function (editableOptions) {
     editableOptions.theme = 'default';
 });
 
@@ -10,51 +10,129 @@ app.config(function ($routeProvider) {
     $routeProvider
         //#upload
         .when('/upload',
-            {
-                controller: 'UploadController',
-                templateUrl: '/view/upload.html'
-            })
+        {
+            controller: 'UploadController',
+            templateUrl: '/view/upload.html'
+        })
 
         //#mapping
         .when('/mapping',
-            {
-                controller: 'MappingController',
-                templateUrl: '/view/mapping.html'
-            })
+        {
+            controller: 'MappingController',
+            templateUrl: '/view/mapping.html'
+        })
 
         //#preview
         .when('/preview',
-            {
-                controller: 'PreviewController',
-                templateUrl: '/view/preview.html'
-            })
-        .otherwise({ redirectTo: '/upload' });
+        {
+            controller: 'PreviewController',
+            templateUrl: '/view/preview.html'
+        })
+        .otherwise({redirectTo: '/upload'});
 });
 
 
-app.controller('UploadController', ['$scope', 'Upload', '$rootScope', '$location', function ($scope, Upload, $rootScope, $location) {
-    //initialize rootScope
-    $rootScope.users = [];
+app.service('StorageService', function () {
+    var users = [];
+    var columns = 0;
+    var password = '';
+    var status = '';
+    var target = '';
+    var map = [];
+
+    var setUsers = function (data) {
+        users = data;
+    };
+    var getUsers = function () {
+        return users;
+    };
+
+    var setColumns = function (data) {
+        columns = data;
+    };
+
+    var getColumns = function () {
+        return columns;
+    };
+
+    var setPassword = function (data) {
+        password = data;
+    };
+    var getPassword = function () {
+        return password;
+    };
+
+    var setStatus = function (data) {
+        status = data;
+    };
+
+    var getStatus = function () {
+        return status;
+    };
+
+    var setTarget = function (data) {
+        target = data;
+    };
+
+    var getTarget = function () {
+        return target;
+    };
+
+    var setMap = function (data) {
+        map = data;
+    };
+
+    var getMap = function () {
+        return map;
+    };
+
+
+    return {
+        setUsers: setUsers,
+        getUsers: getUsers,
+        setColumns: setColumns,
+        getColumns: getColumns,
+        setPassword: setPassword,
+        getPassword: getPassword,
+        setStatus: setStatus,
+        getStatus: getStatus,
+        setTarget: setTarget,
+        getTarget: getTarget,
+        setMap: setMap,
+        getMap: getMap
+    }
+});
+
+
+app.controller('UploadController', ['$scope', 'Upload', '$location', 'StorageService', function ($scope, Upload, $location, StorageService) {
+
     $scope.userStatus = ['active', 'suspended', 'disabled'];
 
     //ajax upload using ng-upload
-    $scope.upload = function(file) {
+    $scope.upload = function (file) {
         file.upload = Upload.upload({
             url: 'api/upload',
             method: 'POST',
             headers: {
                 'my-header': 'my-header-value'
             },
-            fields: {'password': $scope.password, 'status': $scope.status},
+            fields: {},
             file: file,
             fileFormDataName: 'xlsFile'
-        }).then(function(response) {
+        }).then(function (response) {
                 if (response.data.parsedData) {
-                    $rootScope.users = response.data.parsedData;
+
+                    StorageService.setUsers(response.data.parsedData);
+                    StorageService.setColumns(parseInt(response.data.columns));
+                    StorageService.setTarget(response.data.target);
+                    StorageService.setStatus($scope.status);
+                    StorageService.setPassword($scope.password);
+
                     $location.path("/mapping");
                 }
 
-                if (response.data.error){
+
+                if (response.data.error) {
                     alert(response.data.error);
                 }
             }
@@ -62,59 +140,73 @@ app.controller('UploadController', ['$scope', 'Upload', '$rootScope', '$location
     }
 }]);
 
-app.controller('MappingController', ['$scope', '$rootScope', '$location', function($scope, $rootScope, $location){
-    $scope.users = [];
-    $scope.currentPassword = undefined;
-    $scope.currentStatus = undefined;
+app.controller('MappingController', ['$scope', '$location', 'StorageService', function ($scope, $location, StorageService) {
 
+
+    $scope.users = StorageService.getUsers();
+    $scope.password = StorageService.getPassword();
+    $scope.currentStatus = StorageService.getStatus();
     $scope.userStatus = ['active', 'suspended', 'disabled'];
 
-    users = $rootScope.users;
-    if (users && users.length > 0) {
-        $scope.users = users;
-        first = users[0];
-        $scope.currentPassword = first.password;
-        $scope.currentStatus = first.status;
+
+    columns = StorageService.getColumns();
+    keys = ['firstname', 'lastname', 'email', 'country', 'city', 'address', 'password', 'status'];
+
+    $scope.keys = keys;
+    $scope.fields = [];
+    for (i = 0; i < columns; i++) {
+        field = {
+            default: keys[i],
+            name: 'field' + i
+        };
+
+        $scope.fields.push(field);
     }
 
-    $scope.saveUser = function(data, index){
-        $scope.users[index] = data;
-    };
+    $scope.preview = function () {
 
-    $scope.removeUser = function(index){
-        $scope.users.splice(index, 1);
-    };
-
-    $scope.preview = function(){
-        editedUsers = $scope.users;
-        if (editedUsers && editedUsers.length > 0){
-            for (i = 0; i< editedUsers.length; i++){
-                editedUsers[i].password = $scope.currentPassword;
-                editedUsers[i].status = $scope.currentStatus;
-            }
+        map = [];
+        for (j = 0; j < $scope.fields.length; j++) {
+            mappedField = $scope.fields[j];
+            map.push(mappedField.name);
         }
-
-        $rootScope.users = editedUsers;
+        StorageService.setMap(map);
         $location.path("/preview");
+
+
     }
 }]);
 
-app.controller('PreviewController', ['$scope', '$rootScope', '$location', '$http', function($scope, $rootScope, $location, $http){
-    $scope.users = [];
+app.controller('PreviewController', ['$scope', '$location', '$http', 'StorageService', function ($scope, $location, $http, StorageService) {
 
-    users = $rootScope.users;
-    if (users && users.length > 0){
-        $scope.users = users;
-    }
+    $scope.users = StorageService.getUsers();
+    $scope.map = StorageService.getMap();
+    $scope.password = StorageService.getPassword();
+    $scope.status = StorageService.getStatus();
+    target = StorageService.getTarget();
 
-    $scope.backToMapping = function(){
+    $scope.backToMapping = function () {
         $location.path("/mapping");
     }
 
-    $scope.saveToDatabase = function(){
-        jsonUsers = JSON.stringify($scope.users);
-        $http.post('api/save', {users: $scope.users}).then(function(response){
-                console.log(response);
+    $scope.saveToDatabase = function () {
+
+        $http.post('api/save',
+            {
+                map: $scope.map,
+                target: target,
+                password: $scope.password,
+                status: $scope.status
+            }).then(function (response) {
+
+                if (response.data.success){
+                    alert(response.data.success + 'users added successfully');
+                }
+
+                if (response.data.error){
+                    alert(response.data.error);
+                }
+
             }
         );
     }
