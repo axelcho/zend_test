@@ -39,9 +39,7 @@ upload
    uploads an excel file, set bulk password and bulk status
 
 mapping 
-   map the data. User can individually edit each record by row. After edit, click on 'save' button.
-   If there are more than 10 records, only first 3 and last 1 records will be shown.
-   If there is any record with incomplete data, such data will always show up. 
+   map the columns of the data
 
 preview
    visitor can go back to the previous page (#mapping), or save the record to database (apply)
