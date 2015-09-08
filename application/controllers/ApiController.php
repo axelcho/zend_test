@@ -93,16 +93,36 @@ class ApiController extends Zend_Controller_Action
         }
 
         //cut the number of the data
-        $data = count($data > 3)? (array_slice($data, 0, 3) + end($data)): $data;
+        if (count($data)>4){
+            $merge = array_slice($data, 0, 3);
+            $merge[] = end($data);
+            $data = $merge;
+        }
 
         //parse and fix
         $parsed = $this->sanitize($data, $columns);
 
+        $data = $parsed['data'];
+        $columns = $parsed['columns'];
+
+
+        //add ellipsis (...)
+        if (count ($data) == 4){
+            $merged = array_slice($data, 0, 3);
+            $merged[] = [];
+            $merged[] = end($data);
+
+            $data = $merged;
+        }
+
+
+
+
         //return the parsed user data
         //return only sliced array
         $this->_helper->json([
-            'parsedData' => $parsed['data'],
-            'columns' => $parsed['columns'],
+            'parsedData' => $data,
+            'columns' => $columns,
             'target' => $target,
         ]);
         exit;

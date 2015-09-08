@@ -28,11 +28,21 @@
                          </select>
                     </th>
                     </tr>
-                    <tr ng-repeat = "user in users">
+                    <tbody ng-repeat="user in users">
+
+                    <tr ng-if = "user.length">
                         <td ng-repeat = "field in fields">
                             {{user[$index]||'no data'}}
                         </td>
                     </tr>
+                    <tr ng-if="!user.length">
+                        <td colspan="{{fields.length}}">
+                            .....
+                        </td>
+                    </tr>
+
+
+                    </tbody>
                 </table>
                 <button ng-click="preview()">Submit</button>
             </fieldset>
