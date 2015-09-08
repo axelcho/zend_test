@@ -92,31 +92,15 @@ class ApiController extends Zend_Controller_Action
             die;
         }
 
-        //cut the number of the data
-        if (count($data)>4){
-            $merge = array_slice($data, 0, 3);
-            $merge[] = end($data);
-            $data = $merge;
-        }
-
-        //parse and fix
-        $parsed = $this->sanitize($data, $columns);
-
-        $data = $parsed['data'];
-        $columns = $parsed['columns'];
-
-
-        //add ellipsis (...)
-        if (count ($data) == 4){
-            $merged = array_slice($data, 0, 3);
-            $merged[] = [];
+        //cut down if larger than 10
+        if (count ($data) > 10){
+            $merged = array_slice($data, 0, 10);
             $merged[] = end($data);
-
             $data = $merged;
         }
 
-
-
+        //parse and fix
+        $data = $this->sanitize($data);
 
         //return the parsed user data
         //return only sliced array
@@ -149,13 +133,13 @@ class ApiController extends Zend_Controller_Action
             exit;
         }
 
-        $data = $this->sanitize($data['data'], $data['columns']);
+        $data = $this->sanitize($data['data']);
 
         $pointer = 0;
         $counter = 0;
         try {
 
-            foreach ($data['data'] as $user) {
+            foreach ($data as $user) {
                 //combine with keys from mapping
                 $user = array_combine($map, $user);
 
@@ -249,8 +233,17 @@ class ApiController extends Zend_Controller_Action
                 $error = ['error' => 'This is not a spreadsheet file.'];
                 return $error;
             }
-
             $reader = PHPExcel_IOFactory::createReader($type);
+
+            //if type is csv (.csv or .txt), find the delimeter
+            if ($type == 'CSV') {
+                $csvChecker = new SplFileObject($source);
+                $csvProperty = $csvChecker->getCsvControl();
+                $delimiter = $csvProperty[0];
+                $reader->setDelimiter($delimiter);
+            }
+
+
             $object = $reader->load($source);
 
         } //if read error happens, output error to the json
@@ -258,6 +251,8 @@ class ApiController extends Zend_Controller_Action
             $error = ['error' => 'I cannot read the file.'];
             return $error;
         }
+
+
         //extract the data from the first sheet of the file
         try {
             $sheet = $object->getSheet(0);
@@ -276,24 +271,24 @@ class ApiController extends Zend_Controller_Action
         }
 
         //read just first 10 rows if it is not for full processing
-        $last = ($full)? $rows: 10;
+        $last = $rows;
+
+        $max = ($full || $rows < 11)? $rows: 10;
 
         //read the data, metadata into keys and data into data
         $data = [];
         try {
-            for ($row = 1; $row <= $last; $row++) {
+            for ($row = 1; $row <= $max; $row++) {
                 $data[] = $sheet->rangeToArray('A' . $row . ':' . $columns . $row,
                     NULL, TRUE, FALSE
                 );
-
             }
 
             //add last row if not full processing
-            if (!$full){
+            if (!$full && $rows > 10){
                 $data[] = $sheet->rangeToArray('A'. $last. ':' . $columns.$last, NULL, TRUE, FALSE);
+
             }
-
-
 
         } catch (Exception $e) {
             $error = ['error' => 'I cannot read the data.'];
@@ -315,45 +310,18 @@ class ApiController extends Zend_Controller_Action
 
     /**
      * Clean up php array by removing an intermediate array
-     * Fix for delimeters, tab,      *
      *
      * @param array $data
-     * @param integer $columns
      * @return array
      */
-
-    private function sanitize($data, $columns)
+    private function sanitize($data)
     {
         //clear data row by removing intermediate array
-        //fix for delimeters
         $parsedData = [];
         foreach ($data as $dataRow) {
-            $current = current($dataRow);
-
-            //fix for tab delimited
-            if (count($current) == 1) {
-                $current = explode('\t', current($current));
-                $columns = (count($current) > $columns) ? count($current) : $columns;
-            }
-
-            //fix for pipe delimited
-            if (count($current) == 1) {
-                $current = explode('|', current($current));
-                $columns = (count($current) > $columns) ? count($current) : $columns;
-            }
-
-            //if still not fixed, split by space - this is prone to errors
-            if (count($current) == 1) {
-                $current = preg_split('/\s+/', current($current));
-                $columns = (count($current) > $columns) ? count($current) : $columns;
-            }
-            $parsedData[] = $current;
+            $parsedData[] = current($dataRow);
         }
-
-        return [
-            'data' => $parsedData,
-            'columns' => $columns
-        ];
+        return $parsedData;
     }
 
 }

@@ -30,12 +30,13 @@
                     </tr>
                     <tbody ng-repeat="user in users">
 
-                    <tr ng-if = "user.length">
+                    <tr ng-if = "users.length < 10 || $index <= 2 || $last" >
                         <td ng-repeat = "field in fields">
                             {{user[$index]||'no data'}}
                         </td>
                     </tr>
-                    <tr ng-if="!user.length">
+
+                    <tr ng-if = "users.length > 9 && $index == 3">
                         <td colspan="{{fields.length}}">
                             .....
                         </td>

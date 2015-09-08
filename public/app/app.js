@@ -185,6 +185,10 @@ app.controller('PreviewController', ['$scope', '$location', '$http', 'StorageSer
     $scope.status = StorageService.getStatus();
     target = StorageService.getTarget();
 
+    console.log($scope.users);
+
+
+
     $scope.backToMapping = function () {
         $location.path("/mapping");
     }

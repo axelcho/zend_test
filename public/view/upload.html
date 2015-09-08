@@ -19,10 +19,18 @@
 
                 xlsx File:
                 <input type="file" ngf-select ng-model="xlsFile" name="file"
-                       ngf-max-size="1MB" required>
+                       ngf-max-size="1MB"
+                       accept=".csv,
+                               application/vnd.ms-excel,
+                               application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,
+                               text/plain"
+                       required>
                 <i ng-show="uploadForm.file.$error.required">*required</i><br>
                 <i ng-show="uploadForm.file.$error.maxSize">File too large
                     {{xlsFile.size / 1000000|number:1}}MB: max {{xlsFile.$errorParam}}</i>
+
+
+
                 <br/>
                 <button ng-disabled="!uploadForm.$valid"
                         ng-click="upload(xlsFile)">Submit</button>
