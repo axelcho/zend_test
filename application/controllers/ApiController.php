@@ -72,7 +72,7 @@ class ApiController extends Zend_Controller_Action
         }
 
         //if there is any error in reading the file, return the error
-        $process = $this->readFile($source);
+        $process = $this->readFile($source, 10);
         if (array_key_exists('error', $process)) {
             $error = ['error' => $process['error']];
             $this->_helper->json($error);
@@ -90,13 +90,6 @@ class ApiController extends Zend_Controller_Action
             $error = ['error' => 'File cannot be saved'];
             $this->_helper->json($error);
             die;
-        }
-
-        //cut down if larger than 10
-        if (count ($data) > 10){
-            $merged = array_slice($data, 0, 10);
-            $merged[] = end($data);
-            $data = $merged;
         }
 
         //parse and fix
@@ -125,7 +118,7 @@ class ApiController extends Zend_Controller_Action
 
         //read file from the upload directory
         //send 'true' as all entries should be processed
-        $data = $this->readFile($target, $full = true);
+        $data = $this->readFile($target);
 
         if (array_key_exists('error', $data) || !array_key_exists('data', $data)) {
             $error = ['error' => 'File is corrupted'];
@@ -219,7 +212,7 @@ class ApiController extends Zend_Controller_Action
      * @return array
      */
 
-    private function readFile($source, $full=false)
+    private function readFile($source, $limit = null)
     {
         //load the phpexcel IOFactory class
         include $this->_docRoot . '/vendor/phpoffice/phpexcel/Classes/PHPExcel/IOFactory.php';
@@ -273,7 +266,7 @@ class ApiController extends Zend_Controller_Action
         //read just first 10 rows if it is not for full processing
         $last = $rows;
 
-        $max = ($full || $rows < 11)? $rows: 10;
+        $max = (!$limit || $rows < $limit + 1)? $rows: $limit;
 
         //read the data, metadata into keys and data into data
         $data = [];
@@ -285,7 +278,7 @@ class ApiController extends Zend_Controller_Action
             }
 
             //add last row if not full processing
-            if (!$full && $rows > 10){
+            if ($limit && $rows > 10){
                 $data[] = $sheet->rangeToArray('A'. $last. ':' . $columns.$last, NULL, TRUE, FALSE);
 
             }
