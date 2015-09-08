@@ -58,22 +58,21 @@ class ApiController extends Zend_Controller_Action
      */
     public function uploadAction()
     {
-
-
         //get the uploaded excel file
         $file = current($_FILES);
 
         //get the tmp location of the excel file
         $source = $file['tmp_name'];
 
+        //if the file is not uploaded, reject
         if (!is_uploaded_file($source)) {
             $error = ['error' => 'File not found'];
             $this->_helper->json($error);
             exit;
         }
 
+        //if there is any error in reading the file, return the error
         $process = $this->readFile($source);
-
         if (array_key_exists('error', $process)) {
             $error = ['error' => $process['error']];
             $this->_helper->json($error);
@@ -93,30 +92,17 @@ class ApiController extends Zend_Controller_Action
             die;
         }
 
-        //clear data row by removing intermediate array
-        $parsedData = [];
-        foreach ($data as $dataRow) {
-            $current = current($dataRow);
+        //cut the number of the data
+        $data = count($data > 3)? (array_slice($data, 0, 3) + end($data)): $data;
 
-            //fix for tab delimited
-            if (count($current) == 1) {
-                $current = explode('\t', current($current));
-                $columns = (count($current) > $columns) ? count($current) : $columns;
-            }
-
-            //if still not fixed, split by space - this is prone to errors
-            if (count($current) == 1) {
-                $current = preg_split('/\s+/', current($current));
-                $columns = (count($current) > $columns) ? count($current) : $columns;
-            }
-            $parsedData[] = $current;
-        }
+        //parse and fix
+        $parsed = $this->sanitize($data, $columns);
 
         //return the parsed user data
         //return only sliced array
         $this->_helper->json([
-            'parsedData' => array_slice($parsedData, 0, 3),
-            'columns' => $columns,
+            'parsedData' => $parsed['data'],
+            'columns' => $parsed['columns'],
             'target' => $target,
         ]);
         exit;
@@ -134,7 +120,8 @@ class ApiController extends Zend_Controller_Action
         $status = $post['status'];
 
         //read file from the upload directory
-        $data = $this->readFile($target);
+        //send 'true' as all entries should be processed
+        $data = $this->readFile($target, $full = true);
 
         if (array_key_exists('error', $data) || !array_key_exists('data', $data)) {
             $error = ['error' => 'File is corrupted'];
@@ -142,28 +129,27 @@ class ApiController extends Zend_Controller_Action
             exit;
         }
 
+        $data = $this->sanitize($data['data'], $data['columns']);
 
         $pointer = 0;
         $counter = 0;
         try {
 
             foreach ($data['data'] as $user) {
-
-                //get first element from each array element
-                $user = current($user);
-
                 //combine with keys from mapping
                 $user = array_combine($map, $user);
 
                 //set up doctrine model
                 $model = new Application_Model_Users();
 
-                //populate
-
-                //skip incomplete rows
+                //if required data is missing, return error
                 if (empty($user['firstname']) || empty($user['lastname']) || empty($user['email'])){
-                    continue;
+                    $error = ['error' => 'Required Field is missing from data'];
+                    $this->_helper->json($error);
+                    exit;
                 }
+
+                //populate required field
                 $model->setFirstname($user['firstname']);
                 $model->setLastname($user['lastname']);
                 $model->setEmail($user['email']);
@@ -184,7 +170,8 @@ class ApiController extends Zend_Controller_Action
                     $model->setStatus($status);
                 }
 
-                //optional fields. check both keys and values
+
+                //populate optional fields: optional fields. check both keys and values
                 if (array_key_exists('country', $user) && $user['country']) {
                     $model->setCountry($user['country']);
                 }
@@ -195,8 +182,6 @@ class ApiController extends Zend_Controller_Action
                 if (array_key_exists('address', $user) && $user['address']) {
                     $model->setAddress($user['address']);
                 }
-
-
 
                 //persist the data
                 $this->em->persist($model);
@@ -214,8 +199,6 @@ class ApiController extends Zend_Controller_Action
 
         }
         catch(Exception $e){
-
-            var_dump($e); exit;
             $error = ['error' => 'Database entry failed'];
             $this->_helper->json($error);
             exit;
@@ -232,7 +215,7 @@ class ApiController extends Zend_Controller_Action
      * @return array
      */
 
-    private function readFile($source)
+    private function readFile($source, $full=false)
     {
         //load the phpexcel IOFactory class
         include $this->_docRoot . '/vendor/phpoffice/phpexcel/Classes/PHPExcel/IOFactory.php';
@@ -272,15 +255,26 @@ class ApiController extends Zend_Controller_Action
             return $error;
         }
 
+        //read just first 10 rows if it is not for full processing
+        $last = ($full)? $rows: 10;
+
         //read the data, metadata into keys and data into data
         $data = [];
         try {
-            for ($row = 1; $row <= $rows; $row++) {
+            for ($row = 1; $row <= $last; $row++) {
                 $data[] = $sheet->rangeToArray('A' . $row . ':' . $columns . $row,
                     NULL, TRUE, FALSE
                 );
 
             }
+
+            //add last row if not full processing
+            if (!$full){
+                $data[] = $sheet->rangeToArray('A'. $last. ':' . $columns.$last, NULL, TRUE, FALSE);
+            }
+
+
+
         } catch (Exception $e) {
             $error = ['error' => 'I cannot read the data.'];
             return $error;
@@ -297,4 +291,49 @@ class ApiController extends Zend_Controller_Action
             'columns' => $columns,
         ];
     }
+
+
+    /**
+     * Clean up php array by removing an intermediate array
+     * Fix for delimeters, tab,      *
+     *
+     * @param array $data
+     * @param integer $columns
+     * @return array
+     */
+
+    private function sanitize($data, $columns)
+    {
+        //clear data row by removing intermediate array
+        //fix for delimeters
+        $parsedData = [];
+        foreach ($data as $dataRow) {
+            $current = current($dataRow);
+
+            //fix for tab delimited
+            if (count($current) == 1) {
+                $current = explode('\t', current($current));
+                $columns = (count($current) > $columns) ? count($current) : $columns;
+            }
+
+            //fix for pipe delimited
+            if (count($current) == 1) {
+                $current = explode('|', current($current));
+                $columns = (count($current) > $columns) ? count($current) : $columns;
+            }
+
+            //if still not fixed, split by space - this is prone to errors
+            if (count($current) == 1) {
+                $current = preg_split('/\s+/', current($current));
+                $columns = (count($current) > $columns) ? count($current) : $columns;
+            }
+            $parsedData[] = $current;
+        }
+
+        return [
+            'data' => $parsedData,
+            'columns' => $columns
+        ];
+    }
+
 }

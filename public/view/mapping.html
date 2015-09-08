@@ -23,30 +23,17 @@
                                  ng-init = "field.name = field.default"
                                  ng-model = "field.name"
                                  ng-options = "item for item in keys"
-
                                  >
 
                          </select>
-
                     </th>
                     </tr>
-
-
                     <tr ng-repeat = "user in users">
-
                         <td ng-repeat = "field in fields">
-                            {{user[$index]}||"<no data>"}
+                            {{user[$index]||'no data'}}
                         </td>
-
                     </tr>
-
-
-
                 </table>
-
-
-
-
                 <button ng-click="preview()">Submit</button>
             </fieldset>
         </form>
